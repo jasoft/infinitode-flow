@@ -1,0 +1,15 @@
+[project]
+name = "infinitode-flow"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "keyboard>=0.13.5",
+    "numpy>=2.2.2",
+    "opencv-python>=4.11.0.86",
+    "pillow>=11.1.0",
+    "pyautogui>=0.9.54",
+    "pydirectinput>=1.0.4",
+    "pygetwindow>=0.0.9",
+]
