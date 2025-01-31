@@ -3,6 +3,7 @@ import pyautogui
 from merge_platforms import activate_window, logging
 import time
 import tkinter as tk
+import asyncio
 
 
 cellsize = 90
@@ -151,16 +152,14 @@ def click_element(image_file):
         return False
 
 
-def run(filename):
+async def run(filename):
     with open(filename, "r") as file:
         for line in file:
             if line.startswith("#") or line.strip() == "":  # 忽略注释行和空行
                 continue
             command = line.strip()
-
             process_command(command)
-
-    # 等待一段时间以确保按键操作完成
+            await asyncio.sleep(0)  # 让出控制权以便其他任务运行
 
 
 def update_log_window(window):
@@ -168,14 +167,24 @@ def update_log_window(window):
     window.after(100, update_log_window, window)
 
 
-def main(script_file):
+async def main(script_file):
     global log_text
     window, log_text = create_log_window()
     window.after(100, update_log_window, window)
+    run_task = None
+
     while True:
         activate_window("infinitode 2")
         # 检查屏幕上是否存在指定的图像
         if click_element("restart"):
+            if run_task:
+                run_task.cancel()  # 取消之前的任务
+                try:
+                    await run_task
+                except asyncio.CancelledError:
+                    logging.info("任务已取消")
+                    update_log(log_text, "任务已取消")  # 更新日志窗口
+
             # 购买技能
             di.leftClick(1104, 732, duration=0.5)
             time.sleep(1)
@@ -185,12 +194,21 @@ def main(script_file):
             time.sleep(2)
 
             click_element("startgame")
-            run(script_file)
+            run_task = asyncio.create_task(run(script_file))
 
         if element_exists("musicplayer"):
-            run(script_file)
-        time.sleep(5)
+            if run_task:
+                run_task.cancel()  # 取消之前的任务
+                try:
+                    await run_task
+                except asyncio.CancelledError:
+                    logging.info("任务已取消")
+                    update_log(log_text, "任务已取消")  # 更新日志窗口
+
+            run_task = asyncio.create_task(run(script_file))
+
+        await asyncio.sleep(5)
 
 
 if __name__ == "__main__":
-    main("level/6.3quickmove.txt")
+    asyncio.run(main("level/6.3quickmove.txt"))

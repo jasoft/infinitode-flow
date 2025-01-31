@@ -1,5 +1,5 @@
 #setup
-cellsize 90
+cellsize 96
 boardcenter 1920 1010
 
 #init towers
@@ -104,11 +104,43 @@ move -2 5
 ctrl-r
 
 #upgrade scatter 1 
-sleep 60
+sleep 40
 move -3 4
 alt-3
 alt-1
-sleep 40
 alt-q
 
+#upgrade teal miner 1
+sleep 10
+move -3 6
+shift 10
+
+sleep 20
+shift 10
+
+#build teal miner 2
+sleep 300
+move 3 6
+e
+shift 3
+move 4 5
+`
+ctrl-r
+move 2 5
+ctrl-r
+
+#upgrade scatter 2
+sleep 40
+move -3 4
+alt-3
+alt-1
+alt-q
+
+#upgrade teal miner 2
+sleep 10
+move -3 6
+shift 10
+
+sleep 20
+shift 10
 
