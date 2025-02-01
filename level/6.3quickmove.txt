@@ -28,13 +28,13 @@ ctrl-space
 
 #wait some time to upgrade crush
 move 0 1
-sleep 30
+sleep 15
 alt-1
 alt-2
 shift 10
 
 #upgrade green mine to level 3
-sleep 50
+sleep 30
 move -5 -1
 shift 3
 
@@ -80,11 +80,23 @@ shift 10
 move -5 -1
 shift
 
+#wait snake
+sleep 120
+
 #upgrade ice to 8
 move 0 2
-sleep 240
 alt-q
 shift 5
+
+#buff again
+move 0 0
+sleep 2
+leftclick 3582 488
+leftclick 3582 488
+sleep 2
+leftclick 3582 678
+leftclick 3582 678
+sleep 2
 
 #build scatter 1
 sleep 40
@@ -104,10 +116,11 @@ move -2 5
 ctrl-r
 
 #upgrade scatter 1 
-sleep 40
+sleep 10
 move -3 4
 alt-3
 alt-1
+sleep 10
 alt-q
 
 #upgrade teal miner 1
@@ -118,8 +131,14 @@ shift 10
 sleep 20
 shift 10
 
+#build scatter 2
+sleep 40
+move -3 4
+`
+r
+shift 10
+
 #build teal miner 2
-sleep 300
 move 3 6
 e
 shift 3
@@ -130,10 +149,11 @@ move 2 5
 ctrl-r
 
 #upgrade scatter 2
-sleep 40
+sleep 10
 move -3 4
 alt-3
 alt-1
+sleep 10
 alt-q
 
 #upgrade teal miner 2

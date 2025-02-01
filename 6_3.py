@@ -1,39 +1,13 @@
 import pydirectinput as di
 import pyautogui
 from merge_platforms import activate_window, logging
-import time
-import tkinter as tk
 import asyncio
-
 
 cellsize = 90
 boardcenter = (1920, 1010)
 
 
-def create_log_window():
-    window = tk.Tk()
-    window.title("Bot Log")
-    window.geometry("300x200")
-    window.attributes("-topmost", True)  # 将窗口置顶
-
-    log_text = tk.Text(window, state="disabled", wrap="word")
-    log_text.pack(expand=True, fill="both")
-
-    return window, log_text
-
-
-def update_log(log_text, message):
-    try:
-        log_text.config(state="normal")
-        log_text.insert(tk.END, message + "\n")
-        log_text.config(state="disabled")
-        log_text.see(tk.END)
-
-    except Exception as e:
-        logging.error(f"⚠️ 错误: {e}")
-
-
-def process_command(command_line: str):
+async def process_command(command_line: str):
     """
     解析按键字符串并执行按键输入：
     - "ctrl-r"、"alt-f4" 形式的组合键
@@ -53,7 +27,6 @@ def process_command(command_line: str):
     if command.startswith("#"):  # 忽略注释行
         return
     logging.info(f'执行按键: "{command_line}"')
-    update_log(log_text, f'执行按键: "{command_line}"')  # 更新日志窗口
 
     command_map = {
         "sleep": handle_sleep,
@@ -64,44 +37,43 @@ def process_command(command_line: str):
     }
 
     if command in command_map:
-        command_map[command](parts)
+        await command_map[command](parts)
     else:
-        handle_keypress(parts)
+        await handle_keypress(parts)
 
 
-def handle_sleep(parts):
+async def handle_sleep(parts):
     try:
         sleep_time = float(parts[1])
         logging.info(f"🕒 暂停 {sleep_time} 秒...")
-        update_log(log_text, f"🕒 暂停 {sleep_time} 秒...")  # 更新日志窗口
         for i in range(int(sleep_time), 0, -1):
-            update_log(log_text, f"倒计时: {i} 秒")
-            time.sleep(1)
+            logging.info(f"倒计时: {i} 秒")
+            await asyncio.sleep(1)
     except ValueError:
         logging.error("⚠️ 错误: sleep 后必须跟一个有效的数字！")
 
 
-def handle_leftclick(parts):
+async def handle_leftclick(parts):
     di.leftClick(int(parts[1]), int(parts[2]))
 
 
-def handle_cellsize(parts):
+async def handle_cellsize(parts):
     global cellsize
     cellsize = int(parts[1])
 
 
-def handle_boardcenter(parts):
+async def handle_boardcenter(parts):
     global boardcenter
     boardcenter = (int(parts[1]), int(parts[2]))
 
 
-def handle_move(parts):
+async def handle_move(parts):
     x = int(parts[1])
     y = int(parts[2])
     di.click(boardcenter[0] + x * cellsize, boardcenter[1] + y * cellsize)
 
 
-def handle_keypress(parts):
+async def handle_keypress(parts):
     command = parts[0]
     repeat = int(parts[1]) if len(parts) > 1 else 1
     if "-" in command:  # 处理组合键
@@ -124,7 +96,7 @@ def handle_keypress(parts):
     else:
         for _ in range(repeat):  # 处理单个按键
             di.keyDown(command)
-            time.sleep(0.05)
+            await asyncio.sleep(0.05)
             di.keyUp(command)
 
 
@@ -139,42 +111,41 @@ def element_exists(element):
 def click_element(image_file):
     try:
         logging.info(f"查找 {image_file}")
-        element = pyautogui.locateOnScreen(f"elements/{image_file}.png")
+        element = pyautogui.locateOnScreen(
+            f"elements/{image_file}.png", minSearchTime=3, confidence=0.9
+        )
         if element:
             element_center = pyautogui.center(element)
             di.click(element_center.x, element_center.y)
             logging.info(f"点击 {image_file}")
-            update_log(log_text, f"点击 {image_file}")  # 更新日志窗口
             return True
     except Exception:
         logging.info(f"没有找到 {image_file}")
-        update_log(log_text, f"没有找到 {image_file}")  # 更新日志窗口
         return False
 
 
 async def run(filename):
     with open(filename, "r") as file:
         for line in file:
+            # while not pyautogui.getActiveWindow().title == "Infinitode 2":
+            #     await asyncio.sleep(1)
+            #     logging.info(
+            #         f"等待 Infinitode 2 窗口激活... 当前窗口:{pyautogui.getActiveWindow().title}"
+            #     )
             if line.startswith("#") or line.strip() == "":  # 忽略注释行和空行
                 continue
             command = line.strip()
-            process_command(command)
-            await asyncio.sleep(0)  # 让出控制权以便其他任务运行
-
-
-def update_log_window(window):
-    window.update_idletasks()
-    window.after(100, update_log_window, window)
+            await process_command(command)
+            await asyncio.sleep(0)  # ���出控制权以便其他任务运行
 
 
 async def main(script_file):
-    global log_text
-    window, log_text = create_log_window()
-    window.after(100, update_log_window, window)
     run_task = None
 
+    activate_window("infinitode 2")
+
     while True:
-        activate_window("infinitode 2")
+        # activate_window("infinitode 2")
         # 检查屏幕上是否存在指定的图像
         if click_element("restart"):
             if run_task:
@@ -183,16 +154,13 @@ async def main(script_file):
                     await run_task
                 except asyncio.CancelledError:
                     logging.info("任务已取消")
-                    update_log(log_text, "任务已取消")  # 更新日志窗口
 
             # 购买技能
-            di.leftClick(1104, 732, duration=0.5)
-            time.sleep(1)
-            di.leftClick(3142, 1537, duration=0.5)
-            time.sleep(1)
-            di.leftClick(3567, 1510, duration=0.5)
-            time.sleep(2)
+            di.leftClick(1104, 732, 1)
+            di.leftClick(3142, 1537, 1)
+            di.leftClick(3567, 1510, 2)
 
+            # 开始游戏
             click_element("startgame")
             run_task = asyncio.create_task(run(script_file))
 
@@ -203,11 +171,11 @@ async def main(script_file):
                     await run_task
                 except asyncio.CancelledError:
                     logging.info("任务已取消")
-                    update_log(log_text, "任务已取消")  # 更新日志窗口
 
             run_task = asyncio.create_task(run(script_file))
+            logging.info("游戏已开始")
 
-        await asyncio.sleep(5)
+        await asyncio.sleep(10)
 
 
 if __name__ == "__main__":
