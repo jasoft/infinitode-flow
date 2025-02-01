@@ -101,7 +101,7 @@ async def handle_keypress(parts):
 
 
 async def run(filename):
-    with open(filename, "r") as file:
+    with open(filename, "r", encoding="utf-8") as file:
         for line in file:
             # while not pyautogui.getActiveWindow().title == "Infinitode 2":
             #     await asyncio.sleep(1)

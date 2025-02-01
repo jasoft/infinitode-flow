@@ -5,6 +5,7 @@ boardcenter 1920 1010
 # 初始化塔
 down
 n
+shift 2
 down
 6
 move -2 0
@@ -19,15 +20,17 @@ move 3 4
 e
 move 4 5
 e
+move -5 -1
+shift
 ctrl-space
 ] 2
 
 # 等待一段时间以升级粉碎机
 move 0 1
-sleep 10
+sleep 15
 alt-1
 alt-2
-sleep 10
+sleep 5
 shift 10
 
 # 将绿色矿升级到3级
