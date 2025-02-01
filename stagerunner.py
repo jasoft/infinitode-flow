@@ -1,8 +1,8 @@
 import pydirectinput as di
-import pyautogui
-from merge_platforms import activate_window, logging
+from common import logging, click_element, element_exists, activate_window
 import asyncio
 
+# 棋盘参数
 cellsize = 90
 boardcenter = (1920, 1010)
 
@@ -100,30 +100,6 @@ async def handle_keypress(parts):
             di.keyUp(command)
 
 
-def element_exists(element):
-    try:
-        pyautogui.locateOnScreen(f"elements/{element}.png")
-        return True
-    except Exception:
-        return False
-
-
-def click_element(image_file):
-    try:
-        logging.info(f"查找 {image_file}")
-        element = pyautogui.locateOnScreen(
-            f"elements/{image_file}.png", minSearchTime=3, confidence=0.9
-        )
-        if element:
-            element_center = pyautogui.center(element)
-            di.click(element_center.x, element_center.y)
-            logging.info(f"点击 {image_file}")
-            return True
-    except Exception:
-        logging.info(f"没有找到 {image_file}")
-        return False
-
-
 async def run(filename):
     with open(filename, "r") as file:
         for line in file:
@@ -136,42 +112,44 @@ async def run(filename):
                 continue
             command = line.strip()
             await process_command(command)
-            await asyncio.sleep(0)  # ���出控制权以便其他任务运行
+            await asyncio.sleep(0)  # 出控制权以便其他任务运行
 
 
 async def main(script_file):
     run_task = None
+
+    def cancel_task():
+        if run_task:
+            run_task.cancel()
+            try:
+                run_task.result()
+            except asyncio.CancelledError:
+                logging.info("任务已取消")
 
     activate_window("infinitode 2")
 
     while True:
         # activate_window("infinitode 2")
         # 检查屏幕上是否存在指定的图像
-        if click_element("restart"):
-            if run_task:
-                run_task.cancel()  # 取消之前的任务
-                try:
-                    await run_task
-                except asyncio.CancelledError:
-                    logging.info("任务已取消")
+        if await click_element("restart", waitUntilSuccess=False):
+            logging.info("游戏结束，准备重新开始")
+            cancel_task()
 
             # 购买技能
             di.leftClick(1104, 732, 1)
             di.leftClick(3142, 1537, 1)
-            di.leftClick(3567, 1510, 2)
+            # 如果所有技能都买了, 会弹出一个对话框，点击确定
+            if await element_exists("all_abi_purchased"):
+                di.leftClick(3567, 1510, 2)
 
             # 开始游戏
-            click_element("startgame")
+            await click_element("startgame")
+            await asyncio.sleep(2)
             run_task = asyncio.create_task(run(script_file))
 
-        if element_exists("musicplayer"):
-            if run_task:
-                run_task.cancel()  # 取消之前的任务
-                try:
-                    await run_task
-                except asyncio.CancelledError:
-                    logging.info("任务已取消")
-
+        if await click_element("startgame", waitUntilSuccess=False):
+            cancel_task()
+            await asyncio.sleep(2)
             run_task = asyncio.create_task(run(script_file))
             logging.info("游戏已开始")
 
@@ -179,4 +157,4 @@ async def main(script_file):
 
 
 if __name__ == "__main__":
-    asyncio.run(main("level/6.3quickmove.txt"))
+    asyncio.run(main("level/6.3.it2"))

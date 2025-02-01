@@ -1,17 +1,11 @@
 import cv2
-import logging
 import numpy as np
-import pygetwindow as gw
+
 import pyautogui
 import time
 import keyboard
 import pydirectinput as di
-
-# 配置日志记录
-logging.basicConfig(
-    level=logging.DEBUG,
-    format="%(asctime)s - %(levelname)s - %(message)s",
-)
+from common import logging, activate_window
 
 
 # 设置合成按钮、最大数量按钮和确定按钮的坐标
@@ -22,42 +16,6 @@ CANCEL_BUTTON = (2436, 1814)
 
 PROGRESS_BAR = (1959, 1618)
 CLICK_DELAY = 0.5
-
-
-def log_click(point, action):
-    logging.info(f"{action} at coordinates: ({point[0]}, {point[1]})")
-
-
-# Override pyautogui.click to log all clicks
-original_click = di.click
-
-
-def logged_click(*args, **kwargs):
-    if len(args) >= 2:
-        log_click((args[0], args[1]), "Clicked")
-    logging.debug(f"{args, kwargs}")
-    original_click(*args, **kwargs)
-    time.sleep(CLICK_DELAY)
-
-
-di.click = logged_click
-
-
-# 激活Infinitode 2窗口
-def activate_window(title):
-    try:
-        window = gw.getWindowsWithTitle(title)[0]
-        if window:
-            window.maximize()
-            window.activate()
-            time.sleep(1)  # 等待窗口激活
-            return True
-        else:
-            print(f"未找到窗口: {title}")
-            return False
-    except Exception as e:
-        print(f"激活窗口失败: {e}")
-        return False
 
 
 # 查找界面上的所有方框
@@ -107,7 +65,7 @@ def find_boxes(screenshot):
 def sort_boxes(boxes):
     # 先按y坐标从大到小排序（从下到上）
     boxes.sort(key=lambda box: box[1], reverse=True)
-    # 再按y坐标分组后，按x坐标从大到小排序（从右到左）
+    # 再按y坐���分组后，按x坐标从大到小排序（从右到左）
     sorted_boxes = []
     current_y = None
     current_row = []
