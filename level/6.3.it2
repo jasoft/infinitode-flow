@@ -36,7 +36,7 @@ shift 10
 # 将绿色矿升级到3级
 move -5 -1
 sleep 40
-shift 3
+shift 2
 
 # 升级粉碎机的最终技能
 sleep 30
@@ -75,7 +75,7 @@ shift 10
 
 # 将绿色矿升级到4级
 move -5 -1
-shift 2
+shift 1
 
 # 等待蛇
 sleep 240
