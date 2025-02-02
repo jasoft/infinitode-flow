@@ -1,6 +1,6 @@
 # 设置
-cellsize 96
-boardcenter 1920 1010
+cellsize 45
+boardcenter 958 535
 
 # 初始化塔
 down
@@ -46,20 +46,20 @@ alt-e
 # 升级增益
 move 0 0
 sleep 2
-leftclick 3184 488
-leftclick 3184 488
+leftclick 1504 320
+leftclick 1504 320
 sleep 2
-leftclick 3184 678
-leftclick 3184 678
+leftclick 1504 444
+leftclick 1504 444
 sleep 2
 
 # 超频
 s
-leftclick 1980 1980
+leftclick 958 535
 s
-leftclick 1980 1980
+leftclick 958 535
 s
-leftclick 1980 1980
+leftclick 958 535
 
 # 升级冰塔
 move 0 2
@@ -88,11 +88,11 @@ shift 5
 # 再次升级增益
 move 0 0
 sleep 2
-leftclick 3582 488
-leftclick 3582 488
+leftclick 1745 322
+leftclick 1745 322
 sleep 2
-leftclick 3582 678
-leftclick 3582 678
+leftclick 1745 444
+leftclick 1745 444
 sleep 2
 
 # 建造散射塔1

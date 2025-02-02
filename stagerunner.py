@@ -1,10 +1,20 @@
 import pydirectinput as di
-from common import logging, click_element, element_exists, activate_window
+from common import (
+    logging,
+    WindowController,
+)
 import asyncio
+from tqdm.asyncio import tqdm
 
+BUY_SKILL = (454, 349)
+BUY_SKILL_YES = (1474, 724)
+ALL_SKILL_PURCHASED_OK = (1738, 701)
 # 棋盘参数
-cellsize = 90
-boardcenter = (1920, 1010)
+cellsize = 0
+boardcenter = (0, 0)
+
+
+game = WindowController("Infinitode 2")
 
 
 async def process_command(command_line: str):
@@ -46,15 +56,14 @@ async def handle_sleep(parts):
     try:
         sleep_time = float(parts[1])
         logging.info(f"🕒 暂停 {sleep_time} 秒...")
-        for i in range(int(sleep_time), 0, -1):
-            logging.info(f"倒计时: {i} 秒")
+        for i in tqdm(range(int(sleep_time), 0, -1)):
             await asyncio.sleep(1)
     except ValueError:
         logging.error("⚠️ 错误: sleep 后必须跟一个有效的数字！")
 
 
 async def handle_leftclick(parts):
-    di.leftClick(int(parts[1]), int(parts[2]))
+    game.click(int(parts[1]), int(parts[2]))
 
 
 async def handle_cellsize(parts):
@@ -70,7 +79,7 @@ async def handle_boardcenter(parts):
 async def handle_move(parts):
     x = int(parts[1])
     y = int(parts[2])
-    di.click(boardcenter[0] + x * cellsize, boardcenter[1] + y * cellsize)
+    game.click(boardcenter[0] + x * cellsize, boardcenter[1] + y * cellsize)
 
 
 async def handle_keypress(parts):
@@ -126,28 +135,28 @@ async def main(script_file):
             except asyncio.CancelledError:
                 logging.info("任务已取消")
 
-    activate_window("infinitode 2")
+    game.activate()
 
     while True:
         # activate_window("infinitode 2")
         # 检查屏幕上是否存在指定的图像
-        if await click_element("restart", waitUntilSuccess=False):
+        if await game.click_element("restart", waitUntilSuccess=False):
             logging.info("游戏结束，准备重新开始")
             cancel_task()
 
             # 购买技能
-            di.leftClick(1104, 732, 1)
-            di.leftClick(3142, 1537, 1)
+            game.click(*BUY_SKILL)
+            game.click(*BUY_SKILL_YES)
             # 如果所有技能都买了, 会弹出一个对话框，点击确定
-            if await element_exists("all_abi_purchased"):
-                di.leftClick(3567, 1510, 2)
+            if await game.element_exists("all_abi_purchased"):
+                game.click(*ALL_SKILL_PURCHASED_OK)
 
             # 开始游戏
-            await click_element("startgame")
+            await game.click_element("startgame")
             await asyncio.sleep(2)
             run_task = asyncio.create_task(run(script_file))
 
-        if await click_element("startgame", waitUntilSuccess=False):
+        if await game.click_element("startgame", waitUntilSuccess=False):
             cancel_task()
             await asyncio.sleep(2)
             run_task = asyncio.create_task(run(script_file))
