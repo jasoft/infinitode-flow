@@ -124,7 +124,7 @@ async def run(filename):
             #     logging.info(
             #         f"等待 Infinitode 2 窗口激活... 当前窗口:{pyautogui.getActiveWindow().title}"
             #     )
-            if line.startswith("#") or line.strip() == "":  # 忽略注释行和空行
+            if line.strip() == "":  # 忽略注释行和空行
                 continue
             command = line.strip()
             await process_command(command)

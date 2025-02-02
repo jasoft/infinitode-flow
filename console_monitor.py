@@ -23,7 +23,7 @@ class ConsoleMonitor:
         )
         # 添加一个进度条任务，总值为 max_progress
         self.task = self.progress.add_task(
-            "任务进度", total=self.max_progress, completed=0
+            "等待中", total=self.max_progress, completed=0
         )
         self._lock = threading.Lock()
         self._running = False
