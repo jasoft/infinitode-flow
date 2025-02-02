@@ -10,7 +10,7 @@ console = Console()
 
 
 class ConsoleMonitor:
-    def __init__(self, max_status=5, max_progress=100):
+    def __init__(self, max_status=5, max_progress=600):
         self.max_status = max_status
         self.status_history = []
         self.max_progress = max_progress
@@ -34,13 +34,13 @@ class ConsoleMonitor:
             if len(self.status_history) > self.max_status:
                 self.status_history.pop(0)
 
-    def set_progress(self, completed):
+    def set_progress(self, total, completed):
         with self._lock:
             if completed < 0:
                 completed = 0
             elif completed > self.max_progress:
                 completed = self.max_progress
-            self.progress.update(self.task, completed=completed)
+            self.progress.update(self.task, total=total, completed=completed)
 
     def render(self):
         with self._lock:
