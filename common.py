@@ -98,8 +98,7 @@ class WindowController:
             raise Exception(f"窗口未激活: {self.title}")
 
     def activate(self):
-        self.window.activate()
-        time.sleep(1)
+        activate_window(self.title)
 
     def resize(self, w, h):
         self.window.resizeTo(w, h)

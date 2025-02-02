@@ -63,7 +63,7 @@ async def handle_sleep(parts):
 
         for i in range(int(sleep_time), 0, -1):
             await asyncio.sleep(1)
-            status_monitor.set_progress(sleep_time, i)
+            status_monitor.set_progress(sleep_time, i - 1)
 
     except ValueError:
         logging.error("⚠️ 错误: sleep 后必须跟一个有效的数字！")
