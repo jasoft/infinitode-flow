@@ -44,6 +44,7 @@ move 0 1
 alt-e
 
 # 升级增益
+sleep 20
 move 0 0
 sleep 2
 leftclick 1504 320
@@ -78,7 +79,7 @@ move -5 -1
 shift 1
 
 # 等待蛇
-sleep 240
+sleep 220
 
 # 将冰塔升级到8级
 move 0 2
