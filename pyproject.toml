@@ -12,5 +12,5 @@ dependencies = [
     "pyautogui>=0.9.54",
     "pydirectinput>=1.0.4",
     "pygetwindow>=0.0.9",
-    "tqdm>=4.67.1",
+    "rich>=13.9.4",
 ]

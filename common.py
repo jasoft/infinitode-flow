@@ -9,6 +9,7 @@ CLICK_DELAY = 0.2
 ELEMENT_IMAGE_PATH = "elements/1080"
 # 配置日志记录
 logging.basicConfig(
+    filename="infinitodebot.log",
     level=logging.DEBUG,
     format="%(asctime)s - %(levelname)s - %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",

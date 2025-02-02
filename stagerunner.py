@@ -4,7 +4,7 @@ from common import (
     WindowController,
 )
 import asyncio
-from tqdm.asyncio import tqdm
+from console_monitor import ConsoleMonitor
 
 BUY_SKILL = (454, 349)
 BUY_SKILL_YES = (1474, 724)
@@ -15,6 +15,8 @@ boardcenter = (0, 0)
 
 
 game = WindowController("Infinitode 2")
+status_monitor = ConsoleMonitor(max_status=5)
+status_monitor.start(refresh_interval=0.1)
 
 
 async def process_command(command_line: str):
@@ -35,7 +37,9 @@ async def process_command(command_line: str):
     command = parts[0]
 
     if command.startswith("#"):  # 忽略注释行
+        status_monitor.update_status(f"{command_line[1:]}", color="blue")
         return
+    status_monitor.update_status(f"执行按键: {command_line}", color="white")
     logging.info(f'执行按键: "{command_line}"')
 
     command_map = {
@@ -56,8 +60,10 @@ async def handle_sleep(parts):
     try:
         sleep_time = float(parts[1])
         logging.info(f"🕒 暂停 {sleep_time} 秒...")
-        for i in tqdm(range(int(sleep_time), 0, -1)):
+        status_monitor.max_progress = sleep_time
+        for i in range(int(sleep_time), 0, -1):
             await asyncio.sleep(1)
+            status_monitor.set_progress(i)
 
     except ValueError:
         logging.error("⚠️ 错误: sleep 后必须跟一个有效的数字！")
@@ -133,39 +139,43 @@ async def main(script_file):
             run_task.cancel()
             try:
                 run_task.result()
-            except asyncio.CancelledError:
-                logging.info("任务已取消")
-            except asyncio.InvalidStateError:
-                logging.info("任务已完成")
+            except (asyncio.CancelledError, asyncio.InvalidStateError) as e:
+                logging.info(f"任务取消或无效状态错误: {e}")
+                status_monitor.update_status("当前任务已取消", color="yellow")
 
-    while True:
-        game.resize(1920, 1080)
-        game.activate()
-        # activate_window("infinitode 2")
-        # 检查屏幕上是否存在指定的图像
-        if await game.click_element("restart", waitUntilSuccess=False):
-            logging.info("游戏结束，准备重新开始")
-            cancel_task()
+    try:
+        while True:
+            game.resize(1920, 1080)
+            game.activate()
+            # activate_window("infinitode 2")
+            # 检查屏幕上是否存在指定的图像
+            if await game.click_element("restart", waitUntilSuccess=False):
+                logging.info("游戏结束，准备重新开始")
+                status_monitor.update_status("游戏结束，准备重新开始", color="yellow")
+                cancel_task()
 
-            # 购买技能
-            game.click(*BUY_SKILL)
-            game.click(*BUY_SKILL_YES)
-            # 如果所有技能都买了, 会弹出一个对话框，点击确定
-            if await game.element_exists("all_abi_purchased"):
-                game.click(*ALL_SKILL_PURCHASED_OK)
+                # 购买技能
+                game.click(*BUY_SKILL)
+                game.click(*BUY_SKILL_YES)
+                # 如果所有技能都买了, 会弹出一个对话框，点击确定
+                if await game.element_exists("all_abi_purchased"):
+                    game.click(*ALL_SKILL_PURCHASED_OK)
 
-            # 开始游戏
-            await game.click_element("startgame")
-            await asyncio.sleep(2)
-            run_task = asyncio.create_task(run(script_file))
+                # 开始游戏
+                await game.click_element("startgame")
+                await asyncio.sleep(2)
+                run_task = asyncio.create_task(run(script_file))
 
-        if await game.click_element("startgame", waitUntilSuccess=False):
-            cancel_task()
-            await asyncio.sleep(2)
-            run_task = asyncio.create_task(run(script_file))
-            logging.info("游戏已开始")
+            if await game.click_element("startgame", waitUntilSuccess=False):
+                cancel_task()
+                await asyncio.sleep(2)
+                run_task = asyncio.create_task(run(script_file))
+                logging.info("游戏已开始")
 
-        await asyncio.sleep(10)
+            await asyncio.sleep(10)
+    except KeyboardInterrupt:
+        status_monitor.stop()
+        status_monitor.print("ConsoleMonitor 已停止")
 
 
 if __name__ == "__main__":
