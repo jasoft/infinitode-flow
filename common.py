@@ -100,6 +100,9 @@ class WindowController:
         self.window.activate()
         time.sleep(1)
 
+    def resize(self, w, h):
+        self.window.resizeTo(w, h)
+
     async def element_exists(self, element):
         logging.info(f"查找 {element}")
         try:

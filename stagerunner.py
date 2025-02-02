@@ -135,9 +135,9 @@ async def main(script_file):
             except asyncio.CancelledError:
                 logging.info("任务已取消")
 
-    game.activate()
-
     while True:
+        game.activate()
+        game.resize(1920, 1080)
         # activate_window("infinitode 2")
         # 检查屏幕上是否存在指定的图像
         if await game.click_element("restart", waitUntilSuccess=False):
