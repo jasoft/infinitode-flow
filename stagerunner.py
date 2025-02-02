@@ -58,6 +58,7 @@ async def handle_sleep(parts):
         logging.info(f"🕒 暂停 {sleep_time} 秒...")
         for i in tqdm(range(int(sleep_time), 0, -1)):
             await asyncio.sleep(1)
+
     except ValueError:
         logging.error("⚠️ 错误: sleep 后必须跟一个有效的数字！")
 

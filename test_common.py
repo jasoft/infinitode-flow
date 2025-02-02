@@ -28,20 +28,20 @@ class TestCommonFunctions(unittest.TestCase):
         self.assertEqual(width, 1920)
         self.assertEqual(height, 1080)
 
+    def test_click_in_window(self):
+        window_title = "Infinitode 2"
 
-def test_click_in_window(self):
-    window_title = "Infinitode 2"
+        # 激活窗口
+        controller = WindowController(window_title)
+        controller.resize(1920, 1080)
+        controller.activate()
 
-    # 激活窗口
-    controller = WindowController(window_title)
-    controller.activate()
+        # 尝试点击几个窗口内的点
+        points_to_click = [(100, 100), (200, 200), (300, 300)]
 
-    # 尝试点击几个窗口内的点
-    points_to_click = [(100, 100), (200, 200), (300, 300)]
-
-    for point in points_to_click:
-        controller.click(point[0], point[1])
-        time.sleep(1)  # 等待一秒观察点击效果
+        for point in points_to_click:
+            controller.click(point[0], point[1])
+            time.sleep(1)  # 等待一秒观察点击效果
 
 
 if __name__ == "__main__":
