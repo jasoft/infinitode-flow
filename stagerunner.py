@@ -134,6 +134,8 @@ async def main(script_file):
                 run_task.result()
             except asyncio.CancelledError:
                 logging.info("任务已取消")
+            except asyncio.InvalidStateError:
+                logging.info("任务已完成")
 
     while True:
         game.resize(1920, 1080)
