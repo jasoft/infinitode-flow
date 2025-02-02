@@ -134,7 +134,7 @@ async def run(filename):
 async def main(script_file):
     run_task = None
 
-    def cancel_task():
+    def cancel_botting_task():
         if run_task:
             run_task.cancel()
             try:
@@ -152,7 +152,7 @@ async def main(script_file):
             if await game.click_element("restart", waitUntilSuccess=False):
                 logging.info("游戏结束，准备重新开始")
                 status_monitor.update_status("游戏结束，准备重新开始", color="yellow")
-                cancel_task()
+                cancel_botting_task()
 
                 # 购买技能
                 game.click(*BUY_SKILL)
@@ -167,13 +167,14 @@ async def main(script_file):
                 run_task = asyncio.create_task(run(script_file))
 
             if await game.click_element("startgame", waitUntilSuccess=False):
-                cancel_task()
+                cancel_botting_task()
                 await asyncio.sleep(2)
                 run_task = asyncio.create_task(run(script_file))
                 logging.info("游戏已开始")
 
             await asyncio.sleep(10)
     except KeyboardInterrupt:
+        cancel_botting_task()
         status_monitor.stop()
         status_monitor.print("ConsoleMonitor 已停止")
 
