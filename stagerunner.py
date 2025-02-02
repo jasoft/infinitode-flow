@@ -149,6 +149,7 @@ async def main(script_file):
             game.activate()
             # activate_window("infinitode 2")
             # 检查屏幕上是否存在指定的图像
+            status_monitor.update_status("等待游戏开始...", color="white")
             if await game.click_element("restart", waitUntilSuccess=False):
                 logging.info("游戏结束，准备重新开始")
                 status_monitor.update_status("游戏结束，准备重新开始", color="yellow")
@@ -173,7 +174,8 @@ async def main(script_file):
                 logging.info("游戏已开始")
 
             await asyncio.sleep(10)
-    except KeyboardInterrupt:
+
+    except (KeyboardInterrupt, asyncio.CancelledError):
         cancel_botting_task()
         status_monitor.stop()
         status_monitor.print("ConsoleMonitor 已停止")
