@@ -15,7 +15,7 @@ boardcenter = (0, 0)
 
 
 game = WindowController("Infinitode 2")
-status_monitor = ConsoleMonitor(max_status=5)
+status_monitor = ConsoleMonitor(max_status=20)
 status_monitor.start(refresh_interval=0.1)
 
 
@@ -37,10 +37,10 @@ async def process_command(command_line: str):
     command = parts[0]
 
     if command.startswith("#"):  # 忽略注释行
-        status_monitor.update_status(f"{command_line[1:]}", color="blue")
+        status_monitor.update_status(f"{command_line[1:].lstrip()}", color="green")
         return
-    status_monitor.update_status(f"执行按键: {command_line}", color="white")
-    logging.info(f'执行按键: "{command_line}"')
+    status_monitor.update_status(f"执行命令: {command_line}", color="white")
+    logging.info(f'执行命令: "{command_line}"')
 
     command_map = {
         "sleep": handle_sleep,
