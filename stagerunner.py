@@ -1,10 +1,11 @@
 import pydirectinput as di
 from common import (
     logging,
-    WindowController,
+    GameBot,
 )
 import asyncio
 from console_monitor import ConsoleMonitor
+from transitions.extensions.asyncio import AsyncMachine as Machine
 
 BUY_SKILL = (454, 349)
 BUY_SKILL_YES = (1474, 724)
@@ -14,9 +15,103 @@ cellsize = 0
 boardcenter = (0, 0)
 
 
-game = WindowController("Infinitode 2")
+game = GameBot("Infinitode 2", elements_path="elements/1080")
+machine = None
+
 status_monitor = ConsoleMonitor(max_status=20)
 status_monitor.start(refresh_interval=0.1)
+
+
+class GameStateMachine:
+    states = [
+        "MAIN_MENU",
+        "RESTART_SCREEN",
+        "START_GAME_SCREEN",
+        "PREPARE_TOWERS_SCREEN",
+    ]
+    run_task = None
+
+    def __init__(self, script_file):
+        # 初始化状态机
+        self.machine = Machine(
+            model=self,
+            states=self.states,
+            initial="START_GAME_SCREEN",  # 初始状态
+            auto_transitions=False,  # 关闭自动状态转换
+        )
+
+        # 定义状态转换规则（从 A 状态可跳转到 B 状态）
+        self.machine.add_transition(
+            "restart", "*", "RESTART_SCREEN", after="on_enter_restart"
+        )
+        self.machine.add_transition(
+            "startgame", "*", "START_GAME_SCREEN", after="on_enter_startgame"
+        )
+        self.machine.add_transition(
+            "prepare_towers",
+            "*",
+            "PREPARE_TOWERS_SCREEN",
+            conditions=["is_not_preparing_towers"],
+            after="on_enter_prepare_towers",
+        )
+        self.machine.add_transition(
+            "quitbot", "*", "MAIN_MENU", after="on_enter_quitbot"
+        )
+        self.machine.add_transition(
+            "run_script_finished",
+            "*",
+            "GAME_RUNNING_SCREEN",
+            after="on_enter_run_script_finished",
+        )
+
+        self.script_file = script_file
+        self._run_game = False
+
+    def is_not_preparing_towers(self):
+        return not self._run_game
+
+    def on_enter_run_script_finished(self):
+        self._run_game = False
+
+    async def on_enter_restart(self):
+        logging.info("游戏结束，准备重新开始")
+        status_monitor.update_status("游戏结束，准备重新开始", color="yellow")
+        self.cancel_botting_task()
+        await game.click_element("restart")
+
+    async def on_enter_startgame(self):
+        self.cancel_botting_task()
+        await asyncio.sleep(2)
+        await game.click(*BUY_SKILL)
+        await game.click(*BUY_SKILL_YES)
+        # 如果所有技能都买了, 会弹出一个对话框，点击确定
+        if await game.element_exists("all_abi_purchased"):
+            await game.click(*ALL_SKILL_PURCHASED_OK)
+        await game.click_element("startgame")
+
+    async def on_enter_prepare_towers(self):
+        self.cancel_botting_task()
+        logging.info("准备防御塔")
+        status_monitor.update_status("准备防御塔", color="yellow")
+        # 开始游戏
+        self._run_game = True
+        self.run_task = asyncio.create_task(run(self.script_file))
+        logging.info("游戏已开始")
+
+    async def on_enter_quitbot(self):
+        self.cancel_botting_task()
+        logging.info("退出bot")
+        status_monitor.update_status("退出bot", color="yellow")
+
+    def cancel_botting_task(self):
+        if self.run_task:
+            self.run_task.cancel()
+            self._run_game = False
+            try:
+                self.run_task.result()
+            except (asyncio.CancelledError, asyncio.InvalidStateError) as e:
+                logging.info(f"任务取消或无效状态错误: {e}")
+                status_monitor.update_status("当前任务已取消", color="yellow")
 
 
 async def process_command(command_line: str):
@@ -70,7 +165,7 @@ async def handle_sleep(parts):
 
 
 async def handle_leftclick(parts):
-    game.click(int(parts[1]), int(parts[2]))
+    await game.click(int(parts[1]), int(parts[2]))
 
 
 async def handle_cellsize(parts):
@@ -86,7 +181,7 @@ async def handle_boardcenter(parts):
 async def handle_move(parts):
     x = int(parts[1])
     y = int(parts[2])
-    game.click(boardcenter[0] + x * cellsize, boardcenter[1] + y * cellsize)
+    await game.click(boardcenter[0] + x * cellsize, boardcenter[1] + y * cellsize)
 
 
 async def handle_keypress(parts):
@@ -117,68 +212,46 @@ async def handle_keypress(parts):
 
 
 async def run(filename):
+    logging.info(f"运行脚本: {filename}")
     with open(filename, "r", encoding="utf-8") as file:
         for line in file:
-            # while not pyautogui.getActiveWindow().title == "Infinitode 2":
-            #     await asyncio.sleep(1)
-            #     logging.info(
-            #         f"等待 Infinitode 2 窗口激活... 当前窗口:{pyautogui.getActiveWindow().title}"
-            #     )
             if line.strip() == "":  # 忽略注释行和空行
                 continue
             command = line.strip()
+
             await process_command(command)
             await asyncio.sleep(0)  # 出控制权以便其他任务运行
+    machine.run_script_finished()
 
 
 async def main(script_file):
-    run_task = None
-
-    def cancel_botting_task():
-        if run_task:
-            run_task.cancel()
-            try:
-                run_task.result()
-            except (asyncio.CancelledError, asyncio.InvalidStateError) as e:
-                logging.info(f"任务取消或无效状态错误: {e}")
-                status_monitor.update_status("当前任务已取消", color="yellow")
+    game_elements = ["restart", "startgame", "prepare_towers"]
+    global machine
+    machine = GameStateMachine(script_file)
 
     try:
         while True:
             game.resize(1920, 1080)
             game.activate()
-            # activate_window("infinitode 2")
-            # 检查屏幕上是否存在指定的图像
             status_monitor.update_status("等待游戏开始...", color="white")
-            if await game.click_element("restart", waitUntilSuccess=False):
-                logging.info("游戏结束，准备重新开始")
-                status_monitor.update_status("游戏结束，准备重新开始", color="yellow")
-                cancel_botting_task()
 
-                # 购买技能
-                game.click(*BUY_SKILL)
-                game.click(*BUY_SKILL_YES)
-                # 如果所有技能都买了, 会弹出一个对话框，点击确定
-                if await game.element_exists("all_abi_purchased"):
-                    game.click(*ALL_SKILL_PURCHASED_OK)
+            elements_found = await asyncio.gather(
+                *[game.element_exists(element) for element in game_elements]
+            )
 
-                # 开始游戏
-                await game.click_element("startgame")
-                await asyncio.sleep(2)
-                run_task = asyncio.create_task(run(script_file))
-
-            if await game.click_element("startgame", waitUntilSuccess=False):
-                cancel_botting_task()
-                await asyncio.sleep(2)
-                run_task = asyncio.create_task(run(script_file))
-                logging.info("游戏已开始")
-
-            await asyncio.sleep(10)
-
-    except (KeyboardInterrupt, asyncio.CancelledError):
-        cancel_botting_task()
+            for method_name, exists in zip(game_elements, elements_found):
+                logging.info(f"{method_name} {'找到' if exists else '未找到'}")
+                if exists:
+                    logging.info(f"执行 machine.{method_name} 方法...")
+                    result = await machine.trigger(method_name)
+                    # 如果返回的是协程对象，则等待其完成
+                    if hasattr(result, "__await__"):
+                        await result
+            await asyncio.sleep(2)
+    except KeyboardInterrupt:
+        machine.quitbot()
+        status_monitor.update_status("ConsoleMonitor 已停止")
         status_monitor.stop()
-        status_monitor.print("ConsoleMonitor 已停止")
 
 
 if __name__ == "__main__":

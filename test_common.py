@@ -2,7 +2,7 @@ import unittest
 from common import resize_window
 import pygetwindow as gw
 import time
-from common import WindowController
+from common import GameBot
 
 
 class TestCommonFunctions(unittest.TestCase):
@@ -32,7 +32,7 @@ class TestCommonFunctions(unittest.TestCase):
         window_title = "Infinitode 2"
 
         # 激活窗口
-        controller = WindowController(window_title)
+        controller = GameBot(window_title)
         controller.resize(1920, 1080)
         controller.activate()
 

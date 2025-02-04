@@ -1,3 +1,4 @@
+import os
 import time
 import logging
 import pyautogui
@@ -73,10 +74,11 @@ cellsize = 90
 boardcenter = (1920, 1010)
 
 
-class WindowController:
-    def __init__(self, title):
+class GameBot:
+    def __init__(self, title, elements_path="elements"):
         self.title = title
         self.window = self._get_window()
+        self.elements_path = elements_path
 
     def _get_window(self):
         try:
@@ -88,11 +90,11 @@ class WindowController:
         except Exception as e:
             raise Exception(f"获取窗口失败: {e}")
 
-    def click(self, x, y):
+    async def click(self, x, y):
         if self.window:
             window_left, window_top = self.window.left, self.window.top
             click_x, click_y = window_left + x, window_top + y
-            di.click(click_x, click_y)
+            await asyncio.to_thread(di.click, click_x, click_y)
             log_click((click_x, click_y), "Clicked")
         else:
             raise Exception(f"窗口未激活: {self.title}")
@@ -108,7 +110,7 @@ class WindowController:
         try:
             await asyncio.to_thread(
                 pyautogui.locateOnScreen,
-                f"{ELEMENT_IMAGE_PATH}/{element}.png",
+                os.path.join(ELEMENT_IMAGE_PATH, f"{element}.png"),
                 confidence=0.9,
             )
             logging.info(f"找到 {element}")
@@ -116,6 +118,22 @@ class WindowController:
         except Exception:
             logging.info(f"没有找到 {element}")
             return False
+
+    async def find_element(self, element):
+        logging.info(f"查找 {element}")
+        try:
+            element_box = await asyncio.to_thread(
+                pyautogui.locateOnScreen,
+                os.path.join(ELEMENT_IMAGE_PATH, f"{element}.png"),
+                confidence=0.9,
+            )
+            if element_box:
+                element_center = pyautogui.center(element_box)
+                logging.info(f"找到 {element_box}")
+                return element_center
+        except Exception:
+            logging.info(f"没有找到 {element_box}")
+            return None
 
     async def click_element(self, image_file, confidence=0.9, waitUntilSuccess=True):
         # TODO: search from window region
