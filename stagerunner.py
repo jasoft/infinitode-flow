@@ -233,7 +233,6 @@ async def main(script_file):
         while True:
             game.resize(1920, 1080)
             game.activate()
-            status_monitor.update_status("等待游戏开始...", color="white")
 
             elements_found = await asyncio.gather(
                 *[game.element_exists(element) for element in game_elements]

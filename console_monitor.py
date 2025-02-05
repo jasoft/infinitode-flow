@@ -91,7 +91,7 @@ if __name__ == "__main__":
                 f"当前状态更新：{random.randint(0, 100)}", color=random.choice(colors)
             )
             progress_value += random.randint(1, 5)
-            if progress_value > 200:
+            if progress_value > 600:
                 progress_value = 0
             monitor.set_progress(progress_value)
             time.sleep(0.5)
