@@ -221,7 +221,7 @@ async def run(filename):
 
             await process_command(command)
             await asyncio.sleep(0)  # 出控制权以便其他任务运行
-    machine.run_script_finished()
+    await machine.run_script_finished()
 
 
 async def main(script_file):
@@ -248,7 +248,7 @@ async def main(script_file):
                         await result
             await asyncio.sleep(2)
     except KeyboardInterrupt:
-        machine.quitbot()
+        await machine.quitbot()
         status_monitor.update_status("ConsoleMonitor 已停止")
         status_monitor.stop()
 
