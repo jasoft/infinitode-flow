@@ -28,6 +28,7 @@ class GameStateMachine:
         "RESTART_SCREEN",
         "START_GAME_SCREEN",
         "PREPARE_TOWERS_SCREEN",
+        "GAME_RUNNING_SCREEN",
     ]
     run_task = None
 
