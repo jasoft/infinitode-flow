@@ -230,6 +230,7 @@ async def find_elements(elements):
     """
     并发查找多个元素是否存在, 返回一个字典
     """
+    status_monitor.update_status(f"查找游戏元素...{elements}", color="yellow")
     elements_found = await asyncio.gather(
         *[game.element_exists(element) for element in elements]
     )
