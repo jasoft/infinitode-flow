@@ -97,7 +97,7 @@ class GameStateMachine:
         # 开始游戏
         self._is_game_running = True
 
-        self.run_task = await asyncio.create_task(run(self.script_file))
+        self.run_task = asyncio.create_task(run(self.script_file))
         logging.info("游戏已开始")
 
     async def on_enter_quitbot(self):
@@ -255,6 +255,9 @@ async def main(script_file):
                     status_monitor.update_status(f"找到{method_name}", color="green")
                     logging.info(f"执行 machine.{method_name} 方法...")
                     await machine.trigger(method_name)
+                    status_monitor.update_status(
+                        f"执行 machine.{method_name} 方法完毕", color="green"
+                    )
             await asyncio.sleep(5)
     except KeyboardInterrupt:
         await machine.quitbot()
