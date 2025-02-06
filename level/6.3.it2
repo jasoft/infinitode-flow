@@ -39,12 +39,11 @@ sleep 40
 shift 2
 
 # 升级粉碎机的最终技能
-sleep 30
 move 0 1
 alt-e
 
 # 升级增益
-sleep 20
+sleep 50
 move 0 0
 sleep 2
 leftclick 1504 320

@@ -250,8 +250,8 @@ async def main(script_file):
             elements_found = await find_elements(game_elements)
 
             for method_name, exists in elements_found.items():
-                logging.info(f"找到{method_name}")
                 if exists:
+                    status_monitor.update_status(f"找到{method_name}", color="green")
                     logging.info(f"执行 machine.{method_name} 方法...")
                     await machine.trigger(method_name)
             await asyncio.sleep(5)
