@@ -66,13 +66,13 @@ class GameStateMachine:
         )
 
         self.script_file = script_file
-        self._run_game = False
+        self._is_game_running = False
 
     def is_not_preparing_towers(self):
-        return not self._run_game
+        return not self._is_game_running
 
     def on_enter_run_script_finished(self):
-        self._run_game = False
+        self._is_game_running = False
 
     async def on_enter_restart(self):
         logging.info("游戏结束，准备重新开始")
@@ -95,7 +95,7 @@ class GameStateMachine:
         logging.info("准备防御塔")
         status_monitor.update_status("准备防御塔", color="yellow")
         # 开始游戏
-        self._run_game = True
+        self._is_game_running = True
         self.run_task = asyncio.create_task(run(self.script_file))
         logging.info("游戏已开始")
 
@@ -107,7 +107,7 @@ class GameStateMachine:
     def cancel_botting_task(self):
         if self.run_task:
             self.run_task.cancel()
-            self._run_game = False
+            self._is_game_running = False
             try:
                 self.run_task.result()
             except (asyncio.CancelledError, asyncio.InvalidStateError) as e:

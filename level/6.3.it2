@@ -97,6 +97,12 @@ sleep 2
 leftclick 1745 444
 leftclick 1745 444
 sleep 2
+leftclick 1745 566
+leftclick 1745 566
+leftclick 1745 566
+leftclick 1745 566
+leftclick 1745 566
+leftclick 1745 566
 
 # 建造散射塔1
 sleep 40
