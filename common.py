@@ -6,7 +6,7 @@ import pydirectinput as di
 import asyncio
 import pygetwindow as gw
 
-CLICK_DELAY = 0.2
+CLICK_DELAY = 0.5
 ELEMENT_IMAGE_PATH = "elements/1080"
 # 配置日志记录
 logging.basicConfig(
@@ -95,7 +95,6 @@ class GameBot:
             window_left, window_top = self.window.left, self.window.top
             click_x, click_y = window_left + x, window_top + y
             await asyncio.to_thread(di.click, click_x, click_y)
-            log_click((click_x, click_y), "Clicked")
         else:
             raise Exception(f"窗口未激活: {self.title}")
 

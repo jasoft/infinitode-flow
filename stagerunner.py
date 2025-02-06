@@ -129,6 +129,11 @@ async def process_command(command_line: str):
     :param command: 按键字符串，例如 "ctrl-r", "alt-f4", "a", "enter", "sleep 3"
     :param repeat: 按键重复次数（仅对按键有效），默认为 1
     """
+    result = await find_elements(["game_running", "prepare_towers"])
+    if not result["game_running"] and not result["prepare_towers"]:
+        logging.info("⚠️ 错误: 游戏未开始或未准备防御塔！")
+        return
+
     parts = command_line.split()
     command = parts[0]
 
@@ -225,6 +230,16 @@ async def run(filename):
     await machine.run_script_finished()
 
 
+async def find_elements(elements):
+    """
+    并发查找多个元素是否存在, 返回一个字典
+    """
+    elements_found = await asyncio.gather(
+        *[game.element_exists(element) for element in elements]
+    )
+    return dict(zip(elements, elements_found))
+
+
 async def main(script_file):
     game_elements = ["restart", "startgame", "prepare_towers"]
     global machine
@@ -235,11 +250,9 @@ async def main(script_file):
             game.resize(1920, 1080)
             game.activate()
 
-            elements_found = await asyncio.gather(
-                *[game.element_exists(element) for element in game_elements]
-            )
+            elements_found = await find_elements(game_elements)
 
-            for method_name, exists in zip(game_elements, elements_found):
+            for method_name, exists in elements_found.items():
                 logging.info(f"{method_name} {'找到' if exists else '未找到'}")
                 if exists:
                     logging.info(f"执行 machine.{method_name} 方法...")
