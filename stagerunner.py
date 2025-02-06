@@ -96,7 +96,8 @@ class GameStateMachine:
         status_monitor.update_status("准备防御塔", color="yellow")
         # 开始游戏
         self._is_game_running = True
-        self.run_task = asyncio.create_task(run(self.script_file))
+
+        self.run_task = await asyncio.create_task(run(self.script_file))
         logging.info("游戏已开始")
 
     async def on_enter_quitbot(self):
@@ -129,10 +130,6 @@ async def process_command(command_line: str):
     :param command: 按键字符串，例如 "ctrl-r", "alt-f4", "a", "enter", "sleep 3"
     :param repeat: 按键重复次数（仅对按键有效），默认为 1
     """
-    result = await find_elements(["game_running", "prepare_towers"])
-    if not result["game_running"] and not result["prepare_towers"]:
-        logging.info("⚠️ 错误: 游戏未开始或未准备防御塔！")
-        return
 
     parts = command_line.split()
     command = parts[0]
@@ -161,10 +158,9 @@ async def handle_sleep(parts):
     try:
         sleep_time = float(parts[1])
         logging.info(f"🕒 暂停 {sleep_time} 秒...")
-
+        status_monitor.set_countdown_time(sleep_time)
         for i in range(int(sleep_time), 0, -1):
             await asyncio.sleep(1)
-            status_monitor.set_progress(sleep_time, i - 1)
 
     except ValueError:
         logging.error("⚠️ 错误: sleep 后必须跟一个有效的数字！")
@@ -237,7 +233,8 @@ async def find_elements(elements):
     elements_found = await asyncio.gather(
         *[game.element_exists(element) for element in elements]
     )
-    return dict(zip(elements, elements_found))
+    result = dict(zip(elements, elements_found))
+    return result
 
 
 async def main(script_file):
@@ -253,14 +250,11 @@ async def main(script_file):
             elements_found = await find_elements(game_elements)
 
             for method_name, exists in elements_found.items():
-                logging.info(f"{method_name} {'找到' if exists else '未找到'}")
+                logging.info(f"找到{method_name}")
                 if exists:
                     logging.info(f"执行 machine.{method_name} 方法...")
-                    result = await machine.trigger(method_name)
-                    # 如果返回的是协程对象，则等待其完成
-                    if hasattr(result, "__await__"):
-                        await result
-            await asyncio.sleep(2)
+                    await machine.trigger(method_name)
+            await asyncio.sleep(5)
     except KeyboardInterrupt:
         await machine.quitbot()
         status_monitor.update_status("ConsoleMonitor 已停止")

@@ -8,12 +8,12 @@ import pygetwindow as gw
 
 CLICK_DELAY = 0.5
 ELEMENT_IMAGE_PATH = "elements/1080"
+GAME_TITLE = "Infinitode 2"
 # 配置日志记录
 logging.basicConfig(
     filename="infinitodebot.log",
     level=logging.DEBUG,
     format="%(asctime)s - %(levelname)s - %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
 )
 
 
@@ -99,31 +99,33 @@ class GameBot:
             raise Exception(f"窗口未激活: {self.title}")
 
     def activate(self):
-        activate_window(self.title)
+        self.window.activate()
 
     def resize(self, w, h):
         self.window.resizeTo(w, h)
 
     async def element_exists(self, element):
-        logging.info(f"查找 {element}")
+        logging.debug(f"查找 {element}")
         try:
             await asyncio.to_thread(
-                pyautogui.locateOnScreen,
+                pyautogui.locateOnWindow,
                 os.path.join(ELEMENT_IMAGE_PATH, f"{element}.png"),
+                GAME_TITLE,
                 confidence=0.9,
             )
             logging.info(f"找到 {element}")
             return True
         except Exception:
-            logging.info(f"没有找到 {element}")
+            logging.debug(f"没有找到 {element}")
             return False
 
     async def find_element(self, element):
         logging.info(f"查找 {element}")
         try:
             element_box = await asyncio.to_thread(
-                pyautogui.locateOnScreen,
+                pyautogui.locateOnWindow,
                 os.path.join(ELEMENT_IMAGE_PATH, f"{element}.png"),
+                GAME_TITLE,
                 confidence=0.9,
             )
             if element_box:
@@ -140,8 +142,9 @@ class GameBot:
             try:
                 logging.debug(f"查找 {image_file}")
                 element = await asyncio.to_thread(
-                    pyautogui.locateOnScreen,
+                    pyautogui.locateOnWindow,
                     f"{ELEMENT_IMAGE_PATH}/{image_file}.png",
+                    GAME_TITLE,
                     minSearchTime=3,
                     confidence=confidence,
                 )

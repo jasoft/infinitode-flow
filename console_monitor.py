@@ -10,20 +10,21 @@ console = Console()
 
 
 class ConsoleMonitor:
-    def __init__(self, max_status=5, max_progress=600):
+    def __init__(self, max_status=5, countdown_time=600):
         self.max_status = max_status
         self.status_history = []
-        self.max_progress = max_progress
+        self.countdown_time = countdown_time
+        self.remaining_time = countdown_time
         self.progress = Progress(
             TextColumn("[progress.description]{task.description}"),
             BarColumn(),
-            TextColumn("{task.percentage:>3.0f}%"),
+            TextColumn("{task.fields[remaining_time]}s"),
             console=console,
             transient=True,
         )
-        # 添加一个进度条任务，总值为 max_progress
+        # 添加一个倒计时任务，总值为 countdown_time
         self.task = self.progress.add_task(
-            "等待中", total=self.max_progress, completed=0
+            "倒计时", total=self.countdown_time, remaining_time=self.remaining_time
         )
         self._lock = threading.Lock()
         self._running = False
@@ -34,17 +35,32 @@ class ConsoleMonitor:
             if len(self.status_history) > self.max_status:
                 self.status_history.pop(0)
 
-    def set_progress(self, total, completed):
+    def set_countdown(self, remaining_time):
         with self._lock:
-            if completed < 0:
-                completed = 0
-            elif completed > self.max_progress:
-                completed = self.max_progress
-            self.progress.update(self.task, total=total, completed=completed)
+            if remaining_time < 0:
+                remaining_time = 0
+            elif remaining_time > self.countdown_time:
+                remaining_time = self.countdown_time
+            self.remaining_time = remaining_time
+            completed = self.countdown_time - self.remaining_time
+            self.progress.update(
+                self.task, remaining_time=self.remaining_time, completed=completed
+            )
+
+    def set_countdown_time(self, countdown_time):
+        with self._lock:
+            self.countdown_time = countdown_time
+            self.remaining_time = countdown_time
+            self.progress.update(
+                self.task,
+                total=self.countdown_time,
+                remaining_time=self.remaining_time,
+                completed=0,
+            )
 
     def render(self):
         with self._lock:
-            # 拼�� status_history 为多行文本
+            # 拼接 status_history 为多行文本
             status_lines = "\n".join(
                 f"[{color}]{text}[/{color}]" for text, color in self.status_history
             )
@@ -69,20 +85,30 @@ class ConsoleMonitor:
                 live.update(self.render())
                 live.refresh()
                 time.sleep(refresh_interval)
+                with self._lock:
+                    if self.remaining_time > 0:
+                        self.remaining_time -= refresh_interval
+                        if self.remaining_time < 0:
+                            self.remaining_time = 0
+                        completed = self.countdown_time - self.remaining_time
+                        self.progress.update(
+                            self.task,
+                            remaining_time=int(self.remaining_time),
+                            completed=completed,
+                        )
 
     def stop(self):
         self._running = False
 
 
 if __name__ == "__main__":
-    monitor = ConsoleMonitor(max_status=5, max_progress=200)
+    monitor = ConsoleMonitor(max_status=5, countdown_time=200)
     monitor.start(refresh_interval=0.1)
 
-    # 模拟状态和进度更新
+    # 模拟状态和倒计时更新
     import random
 
     colors = ["cyan", "yellow", "green", "red", "magenta"]
-    progress_value = 0
 
     try:
         while True:
@@ -90,11 +116,14 @@ if __name__ == "__main__":
             monitor.update_status(
                 f"当前状态更新：{random.randint(0, 100)}", color=random.choice(colors)
             )
-            progress_value += random.randint(1, 5)
-            if progress_value > 600:
-                progress_value = 0
-            monitor.set_progress(progress_value)
             time.sleep(0.5)
+            # 每隔 5 秒动态更新倒计时时间
+            if random.random() < 0.1:
+                new_countdown_time = random.randint(10, 30)
+                monitor.set_countdown_time(new_countdown_time)
+                monitor.update_status(
+                    f"倒计时时间更新为：{new_countdown_time}秒", color="blue"
+                )
     except KeyboardInterrupt:
         monitor.stop()
         console.print("ConsoleMonitor 已停止")
