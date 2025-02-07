@@ -6,6 +6,7 @@ from common import (
 import asyncio
 from console_monitor import ConsoleMonitor
 from transitions.extensions.asyncio import AsyncMachine as Machine
+import time
 
 BUY_SKILL = (454, 349)
 BUY_SKILL_YES = (1474, 724)
@@ -230,11 +231,17 @@ async def find_elements(elements):
     """
     并发查找多个元素是否存在, 返回一个字典
     """
-    status_monitor.update_status(f"查找游戏元素...{elements}", color="yellow")
+    start_time = time.time()
     elements_found = await asyncio.gather(
         *[game.element_exists(element) for element in elements]
     )
     result = dict(zip(elements, elements_found))
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    status_monitor.update_status(
+        f"查找游戏元素耗时: {elapsed_time:.2f} 秒", color="blue"
+    )
+
     return result
 
 

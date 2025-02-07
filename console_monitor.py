@@ -28,6 +28,7 @@ class ConsoleMonitor:
         )
         self._lock = threading.Lock()
         self._running = False
+        self._info = {"分数": 0, "金币": 0, "等级": 1}
 
     def update_status(self, status_text, color="white"):
         with self._lock:
@@ -58,18 +59,34 @@ class ConsoleMonitor:
                 completed=0,
             )
 
+    def update_info(self, key, value):
+        """更新固定信息"""
+        with self._lock:
+            self._info[key] = value
+
     def render(self):
         with self._lock:
             # 拼接 status_history 为多行文本
             status_lines = "\n".join(
                 f"[{color}]{text}[/{color}]" for text, color in self.status_history
             )
+            # 拼接固定信息为多行文本
+            info_lines = "\n".join(
+                f"[white]{k}: [yellow]{v}[/yellow][/white]"
+                for k, v in self._info.items()
+            )
+
         status_panel = Panel(
             status_lines if status_lines else "无状态信息",
             title="Bot 当前状态",
             border_style="blue",
         )
-        return Group(status_panel, self.progress)
+        info_panel = Panel(
+            info_lines if info_lines else "无信息",
+            title="游戏数据",
+            border_style="green",
+        )
+        return Group(status_panel, info_panel, self.progress)
 
     def start(self, refresh_interval=0.1):
         self._running = True
@@ -109,6 +126,7 @@ if __name__ == "__main__":
     import random
 
     colors = ["cyan", "yellow", "green", "red", "magenta"]
+    score = 0
 
     try:
         while True:
@@ -116,8 +134,13 @@ if __name__ == "__main__":
             monitor.update_status(
                 f"当前状态更新：{random.randint(0, 100)}", color=random.choice(colors)
             )
+            # 更新分数
+            score += random.randint(10, 100)
+            monitor.update_info("分数", score)
+            monitor.update_info("金币", random.randint(100, 999))
+
             time.sleep(0.5)
-            # 每隔 5 秒动态更新倒计时时间
+            # 每隔随机时间更新倒计时
             if random.random() < 0.1:
                 new_countdown_time = random.randint(10, 30)
                 monitor.set_countdown_time(new_countdown_time)
