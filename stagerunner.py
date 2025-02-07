@@ -216,6 +216,16 @@ async def handle_keypress(parts):
 
 async def run(filename):
     logging.info(f"运行脚本: {filename}")
+    start_time = time.time()
+
+    async def update_runtime():
+        while True:
+            elapsed_time = int(time.time() - start_time)
+            status_monitor.update_status("脚本运行时间:", f" {elapsed_time} 秒")
+            await asyncio.sleep(1)
+
+    task = asyncio.create_task(update_runtime())
+
     with open(filename, "r", encoding="utf-8") as file:
         for line in file:
             if line.strip() == "":  # 忽略注释行和空行
@@ -225,6 +235,7 @@ async def run(filename):
             await process_command(command)
             await asyncio.sleep(0)  # 出控制权以便其他任务运行
     await machine.run_script_finished()
+    task.cancel()
 
 
 async def find_elements(elements):
@@ -238,9 +249,7 @@ async def find_elements(elements):
     result = dict(zip(elements, elements_found))
     end_time = time.time()
     elapsed_time = end_time - start_time
-    status_monitor.update_status(
-        f"查找游戏元素耗时: {elapsed_time:.2f} 秒", color="blue"
-    )
+    logging.debug(f"查找游戏元素耗时: {elapsed_time:.2f} 秒")
 
     return result
 
@@ -259,12 +268,9 @@ async def main(script_file):
 
             for method_name, exists in elements_found.items():
                 if exists:
-                    status_monitor.update_status(f"找到{method_name}", color="green")
                     logging.info(f"执行 machine.{method_name} 方法...")
                     await machine.trigger(method_name)
-                    status_monitor.update_status(
-                        f"执行 machine.{method_name} 方法完毕", color="green"
-                    )
+
             await asyncio.sleep(5)
     except KeyboardInterrupt:
         await machine.quitbot()

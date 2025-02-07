@@ -28,7 +28,7 @@ class ConsoleMonitor:
         )
         self._lock = threading.Lock()
         self._running = False
-        self._info = {"分数": 0, "金币": 0, "等级": 1}
+        self._info = {}
 
     def update_status(self, status_text, color="white"):
         with self._lock:
@@ -78,7 +78,7 @@ class ConsoleMonitor:
 
         status_panel = Panel(
             status_lines if status_lines else "无状态信息",
-            title="Bot 当前状态",
+            title="脚本运行监控",
             border_style="blue",
         )
         info_panel = Panel(
