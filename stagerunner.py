@@ -216,15 +216,15 @@ async def handle_keypress(parts):
 
 async def run(filename):
     logging.info(f"运行脚本: {filename}")
-    start_time = time.time()
+    # start_time = time.time()
 
-    async def update_runtime():
-        while True:
-            elapsed_time = int(time.time() - start_time)
-            status_monitor.update_status("脚本运行时间:", f" {elapsed_time} 秒")
-            await asyncio.sleep(1)
+    # async def update_runtime():
+    #     while True:
+    #         elapsed_time = int(time.time() - start_time)
+    #         status_monitor.update_info("脚本运行时间", f"{elapsed_time} 秒")
+    #         await asyncio.sleep(1)
 
-    task = asyncio.create_task(update_runtime())
+    # task = asyncio.create_task(update_runtime())
 
     with open(filename, "r", encoding="utf-8") as file:
         for line in file:
@@ -235,7 +235,7 @@ async def run(filename):
             await process_command(command)
             await asyncio.sleep(0)  # 出控制权以便其他任务运行
     await machine.run_script_finished()
-    task.cancel()
+    # task.cancel()
 
 
 async def find_elements(elements):
