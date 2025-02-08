@@ -272,7 +272,6 @@ async def main(script_file):
         while True:
             game.resize(1920, 1080)
             game.activate()
-
             elements_found = await find_elements(game_elements)
 
             for method_name, exists in elements_found.items():

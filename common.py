@@ -7,8 +7,7 @@ import asyncio
 import pygetwindow as gw
 
 CLICK_DELAY = 0.5
-ELEMENT_IMAGE_PATH = "elements/1080"
-GAME_TITLE = "Infinitode 2"
+
 # 配置日志记录
 logging.basicConfig(
     filename="infinitodebot.log",
@@ -110,8 +109,8 @@ class GameBot:
         try:
             await asyncio.to_thread(
                 pyautogui.locateOnWindow,
-                os.path.join(ELEMENT_IMAGE_PATH, f"{element}.png"),
-                GAME_TITLE,
+                os.path.join(self.elements_path, f"{element}.png"),
+                self.title,
                 confidence=0.9,
             )
             logging.debug(f"找到 {element}")
@@ -125,8 +124,8 @@ class GameBot:
         try:
             element_box = await asyncio.to_thread(
                 pyautogui.locateOnWindow,
-                os.path.join(ELEMENT_IMAGE_PATH, f"{element}.png"),
-                GAME_TITLE,
+                os.path.join(self.elements_path, f"{element}.png"),
+                self.title,
                 confidence=0.9,
             )
             if element_box:
@@ -144,8 +143,8 @@ class GameBot:
                 logging.debug(f"查找 {image_file}")
                 element = await asyncio.to_thread(
                     pyautogui.locateOnWindow,
-                    f"{ELEMENT_IMAGE_PATH}/{image_file}.png",
-                    GAME_TITLE,
+                    f"{self.elements_path}/{image_file}.png",
+                    self.title,
                     minSearchTime=3,
                     confidence=confidence,
                 )
