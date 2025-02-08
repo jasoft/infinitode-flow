@@ -12,6 +12,7 @@ GAME_TITLE = "Infinitode 2"
 # 配置日志记录
 logging.basicConfig(
     filename="infinitodebot.log",
+    encoding="utf-8",
     level=logging.DEBUG,
     format="%(asctime)s - %(levelname)s - %(message)s",
 )
@@ -113,7 +114,7 @@ class GameBot:
                 GAME_TITLE,
                 confidence=0.9,
             )
-            logging.info(f"找到 {element}")
+            logging.debug(f"找到 {element}")
             return True
         except Exception:
             logging.debug(f"没有找到 {element}")

@@ -1,4 +1,5 @@
 # language: python
+import asyncio
 import time
 import threading
 from rich.console import Console, Group
@@ -83,14 +84,15 @@ class ConsoleMonitor:
         )
         info_panel = Panel(
             info_lines if info_lines else "无信息",
-            title="游戏数据",
+            title="看板",
             border_style="green",
         )
         return Group(status_panel, info_panel, self.progress)
 
     def start(self, refresh_interval=0.1):
         self._running = True
-        # Live 运行在当前线程，会阻塞，因此使用后台线程启动
+
+        # Live 运行在当前线程
         thread = threading.Thread(
             target=self._live_loop, args=(refresh_interval,), daemon=True
         )
@@ -127,6 +129,21 @@ if __name__ == "__main__":
 
     colors = ["cyan", "yellow", "green", "red", "magenta"]
     score = 0
+    start_time = time.time()
+    running = True  # 添加运行状态标志
+
+    # 创建更新运行时间的线程
+    def update_runtime():
+        while running:  # 使用运行状态标志控制线程
+            runtime = int(time.time() - start_time)
+            hours = runtime // 3600
+            minutes = (runtime % 3600) // 60
+            seconds = runtime % 60
+            monitor.update_info("运行时间", f"{hours:02d}:{minutes:02d}:{seconds:02d}")
+            time.sleep(1)
+
+    runtime_thread = threading.Thread(target=update_runtime, daemon=True)
+    runtime_thread.start()
 
     try:
         while True:
@@ -148,5 +165,7 @@ if __name__ == "__main__":
                     f"倒计时时间更新为：{new_countdown_time}秒", color="blue"
                 )
     except KeyboardInterrupt:
+        running = False  # 设置运行状态为False
+        runtime_thread.join(timeout=2)  # 等待计时线程结束，最多等待2秒
         monitor.stop()
         console.print("ConsoleMonitor 已停止")

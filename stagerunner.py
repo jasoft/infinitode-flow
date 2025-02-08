@@ -7,6 +7,7 @@ import asyncio
 from console_monitor import ConsoleMonitor
 from transitions.extensions.asyncio import AsyncMachine as Machine
 import time
+import threading
 
 BUY_SKILL = (454, 349)
 BUY_SKILL_YES = (1474, 724)
@@ -216,15 +217,23 @@ async def handle_keypress(parts):
 
 async def run(filename):
     logging.info(f"运行脚本: {filename}")
-    # start_time = time.time()
+    start_time = time.time()
+    running = True  # 添加运行状态标志
 
-    # async def update_runtime():
-    #     while True:
-    #         elapsed_time = int(time.time() - start_time)
-    #         status_monitor.update_info("脚本运行时间", f"{elapsed_time} 秒")
-    #         await asyncio.sleep(1)
+    # 创建更新运行时间的线程
+    def update_runtime():
+        while running:  # 使用运行状态标志控制线程
+            runtime = int(time.time() - start_time)
+            hours = runtime // 3600
+            minutes = (runtime % 3600) // 60
+            seconds = runtime % 60
+            status_monitor.update_info(
+                "本局运行时间", f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+            )
+            time.sleep(1)
 
-    # task = asyncio.create_task(update_runtime())
+    runtime_thread = threading.Thread(target=update_runtime, daemon=True)
+    runtime_thread.start()
 
     with open(filename, "r", encoding="utf-8") as file:
         for line in file:
@@ -235,7 +244,7 @@ async def run(filename):
             await process_command(command)
             await asyncio.sleep(0)  # 出控制权以便其他任务运行
     await machine.run_script_finished()
-    # task.cancel()
+    running = False
 
 
 async def find_elements(elements):
